@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Show Me – AI Itinerary Planner</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f4f4f9;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    h1 {
+      color: #333;
+      margin-top: 20px;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 600px;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+      margin-top: 20px;
+    }
+
+    label {
+      display: block;
+      margin-top: 10px;
+      font-weight: bold;
+    }
+
+    input, select {
+      width: 100%;
+      padding: 8px;
+      margin-top: 5px;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+    }
+
+    #map {
+      width: 100%;
+      height: 300px;
+      border-radius: 10px;
+      margin-top: 15px;
+    }
+
+    .checkbox-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .checkbox-group label {
+      font-weight: normal;
+    }
+
+    button {
+      background-color: #007bff;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      margin-top: 20px;
+      cursor: pointer;
+      width: 100%;
+    }
+
+    button:hover {
+      background-color: #0056b3;
+    }
+
+    #itinerary {
+      margin-top: 20px;
+      background: #e9f5ff;
+      padding: 15px;
+      border-radius: 8px;
+      display: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>Show Me – AI Itinerary Planner</h1>
+  <div class="container">
+    <label for="location">1️⃣ Where are you going?</label>
+    <input id="location" type="text" placeholder="Enter your city..." />
+
+    <div id="map"></div>
+
+    <label for="days">2️⃣ How many days will you stay?</label>
+    <input id="days" type="number" min="1" max="30" placeholder="Enter number of days" />
+
+    <label>3️⃣ What are you interested in?</label>
+    <div class="checkbox-group">
+      <label><input type="checkbox" value="Food" /> Food</label>
+      <label><input type="checkbox" value="Museums and Art" /> Museums and Art</label>
+      <label><input type="checkbox" value="Outdoor Activities" /> Outdoor Activities</label>
+      <label><input type="checkbox" value="Classes" /> Classes</label>
+      <label><input type="checkbox" value="Partying" /> Partying</label>
+    </div>
+
+    <button onclick="generateItinerary()">Create My Itinerary</button>
+
+    <div id="itinerary"></div>
+  </div>
+
+  <script>
+    let map;
+    let geocoder;
+    let marker;
+
+    function initMap() {
+      map = new google.maps.Map(document.getElementById("map"), {
+        center: { lat: 40.7128, lng: -74.006 },
+        zoom: 12,
+      });
+      geocoder = new google.maps.Geocoder();
+
+      const locationInput = document.getElementById("location");
+      locationInput.addEventListener("change", () => {
+        const address = locationInput.value;
+        geocoder.geocode({ address: address }, (results, status) => {
+          if (status === "OK") {
+            map.setCenter(results[0].geometry.location);
+            if (marker) marker.setMap(null);
+            marker = new google.maps.Marker({
+              map: map,
+              position: results[0].geometry.location,
+            });
+          }
+        });
+      });
+    }
+
+    function generateItinerary() {async function generateItinerary() {
+        const location = document.getElementById("location").value;
+        const days = parseInt(document.getElementById("days").value, 10);
+        const interests = Array.from(document.querySelectorAll(".checkbox-group input:checked")).map(i => i.value);
+      
+        if (!location || !days || interests.length === 0) {
+          alert("Please fill out all fields!");
+          return;
+        }
+      
+        document.getElementById('itinerary').style.display = 'block';
+        document.getElementById('itinerary').innerText = '⏳ Contacting AI service...';
+      
+        try {
+          const res = await fetch("https://YOUR_BACKEND_DOMAIN/generate-itinerary", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ city: location, days: days, interests: interests })
+          });
+      
+          if (!res.ok) {
+            const txt = await res.text();
+            throw new Error(txt || `HTTP ${res.status}`);
+          }
+      
+          const data = await res.json();
+          document.getElementById('itinerary').innerText = data.text;
+        } catch (err) {
+          console.error(err);
+          document.getElementById('itinerary').innerText = `⚠️ Error: ${err.message}`;
+        }
+      }
+      }
+
+      // Mock AI itinerary generation
+      const itineraryDiv = document.getElementById("itinerary");
+      itineraryDiv.style.display = "block";
+      itineraryDiv.innerHTML = `
+        <h3>Your Tailored Itinerary for ${location}</h3>
+        <p>🗓️ Duration: ${days} days</p>
+        <p>🎯 Interests: ${interests.join(", ")}</p>
+        <p>✨ Generating personalized itinerary using AI...</p>
+      `;
+    }
+  </script>
+
+  <script async
+    src="https://maps.googleapis.com/maps/api/js?key=AIzaSyAuqa0ty-DfAfxGXwf4NTr325G4asHYRos&callback=initMap">
+  </script>
+</body>
+</html>
